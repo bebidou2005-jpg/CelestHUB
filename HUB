@@ -77,103 +77,83 @@ local Toggle = Tab:CreateToggle({
    CurrentValue = false,
    Flag = "Toggle1", 
    Callback = function(Value)
-   local Fly = {}
 
 local player = game.Players.LocalPlayer
 local camera = workspace.CurrentCamera
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 
-local character
-local hrp
-
-local bodyVelocity
-local bodyGyro
-
-local speed = 80
 local flying = false
+local speed = 80
 
-local keys = {
-	W = false,
-	A = false,
-	S = false,
-	D = false,
-	Space = false,
-	LeftControl = false
-}
+local hrp
+local humanoid
 
--- Update character
-local function setupChar()
-	character = player.Character or player.CharacterAdded:Wait()
-	hrp = character:WaitForChild("HumanoidRootPart")
+local bv
+local bg
+
+local function setupChar(char)
+	hrp = char:WaitForChild("HumanoidRootPart")
+	humanoid = char:WaitForChild("Humanoid")
 end
 
-setupChar()
+setupChar(player.Character or player.CharacterAdded:Wait())
 player.CharacterAdded:Connect(setupChar)
 
--- INPUT (you can remove this if your UI handles movement)
-local UIS = game:GetService("UserInputService")
-
-UIS.InputBegan:Connect(function(input, gpe)
-	if gpe then return end
-	if keys[input.KeyCode.Name] ~= nil then
-		keys[input.KeyCode.Name] = true
-	end
-end)
-
-UIS.InputEnded:Connect(function(input)
-	if keys[input.KeyCode.Name] ~= nil then
-		keys[input.KeyCode.Name] = false
-	end
-end)
-
--- START FLY
-function Fly:StartFly(customSpeed)
+local function startFly()
 	if flying then return end
 	flying = true
 
-	speed = customSpeed or speed
+	humanoid.PlatformStand = true
 
-	bodyVelocity = Instance.new("BodyVelocity")
-	bodyVelocity.MaxForce = Vector3.new(1,1,1) * 100000
-	bodyVelocity.Velocity = Vector3.zero
-	bodyVelocity.Parent = hrp
+	bv = Instance.new("BodyVelocity")
+	bv.MaxForce = Vector3.new(1e9, 1e9, 1e9)
+	bv.Velocity = Vector3.zero
+	bv.Parent = hrp
 
-	bodyGyro = Instance.new("BodyGyro")
-	bodyGyro.MaxTorque = Vector3.new(1,1,1) * 100000
-	bodyGyro.CFrame = hrp.CFrame
-	bodyGyro.Parent = hrp
+	bg = Instance.new("BodyGyro")
+	bg.MaxTorque = Vector3.new(1e9, 1e9, 1e9)
+	bg.P = 50000
+	bg.CFrame = hrp.CFrame
+	bg.Parent = hrp
 end
 
--- STOP FLY
-function Fly:StopFly()
+local function stopFly()
 	flying = false
 
-	if bodyVelocity then bodyVelocity:Destroy() end
-	if bodyGyro then bodyGyro:Destroy() end
+	if bv then bv:Destroy() end
+	if bg then bg:Destroy() end
+
+	if humanoid then
+		humanoid.PlatformStand = false
+	end
 end
 
--- MAIN LOOP
-game:GetService("RunService").RenderStepped:Connect(function()
-	if not flying or not hrp then return end
+UIS.InputBegan:Connect(function(input, gpe)
+	if gpe then return end
 
-	local moveDir = Vector3.zero
-
-	if keys.W then moveDir += camera.CFrame.LookVector end
-	if keys.S then moveDir -= camera.CFrame.LookVector end
-	if keys.A then moveDir -= camera.CFrame.RightVector end
-	if keys.D then moveDir += camera.CFrame.RightVector end
-	if keys.Space then moveDir += Vector3.new(0,1,0) end
-	if keys.LeftControl then moveDir -= Vector3.new(0,1,0) end
-
-	if moveDir.Magnitude > 0 then
-		bodyVelocity.Velocity = moveDir.Unit * speed
-	else
-		bodyVelocity.Velocity = Vector3.zero
+	if input.KeyCode == Enum.KeyCode.F then
+		if flying then
+			stopFly()
+		else
+			startFly()
+		end
 	end
-
-	bodyGyro.CFrame = camera.CFrame
 end)
 
-return Fly
+RunService.RenderStepped:Connect(function()
+	if not flying then return end
+	if not hrp then return end
+
+	local move = humanoid.MoveDirection
+	local camCF = camera.CFrame
+
+	local dir = camCF.RightVector * move.X + camCF.LookVector * move.Z
+
+	bv.Velocity = dir * speed
+	bg.CFrame = camCF
+end)
+
    end,
 })
 
