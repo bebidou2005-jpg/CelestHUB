@@ -27,15 +27,15 @@ local Window = Rayfield:CreateWindow({
       RememberJoins = true -- Set this to false to make them join the Discord every time they load it up
    },
 
-   KeySystem = false, -- Set this to true to use our key system
+   KeySystem = true, -- Set this to true to use our key system
    KeySettings = {
-      Title = "Untitled",
+      Title = "CelestKey System",
       Subtitle = "Key System",
       Note = "No method of obtaining the key is provided", -- Use this to tell the user how to get a key
       FileName = "Key", -- It is recommended to use something unique, as other scripts using Rayfield may overwrite your key file
       SaveKey = true, -- The user's key will be saved, but if you change the key, they will be unable to use your script
       GrabKeyFromSite = false, -- If this is true, set Key below to the RAW site you would like Rayfield to get the key from
-      Key = {"Hello"} -- List of keys that the system will accept, can be RAW file links (pastebin, github, etc.) or simple strings ("hello", "key22")
+      Key = {"celestui"} -- List of keys that the system will accept, can be RAW file links (pastebin, github, etc.) or simple strings ("hello", "key22")
    }
 })
 
@@ -77,45 +77,6 @@ local Toggle = Tab:CreateToggle({
    CurrentValue = false,
    Flag = "Toggle1", 
    Callback = function(Value)
-
-local player = game.Players.LocalPlayer
-local char = player.Character or player.CharacterAdded:Wait()
-local hrp = char:WaitForChild("HumanoidRootPart")
-
-_G.Float = _G.Float or {}
-
-if Value then
-    -- START FLOAT
-    if _G.Float.Active then return end
-    _G.Float.Active = true
-
-    local bp = Instance.new("BodyPosition")
-    bp.MaxForce = Vector3.new(1e9, 1e9, 1e9)
-    bp.P = 50000
-    bp.D = 1000
-    bp.Position = hrp.Position
-    bp.Parent = hrp
-
-    _G.Float.BP = bp
-
-    _G.Float.Connection = game:GetService("RunService").RenderStepped:Connect(function()
-        if bp and hrp then
-            bp.Position = hrp.Position -- lock in air at current spot
-        end
-    end)
-
-else
-    -- STOP FLOAT
-    if _G.Float.Connection then
-        _G.Float.Connection:Disconnect()
-    end
-
-    if _G.Float.BP then
-        _G.Float.BP:Destroy()
-    end
-
-    _G.Float = {}
-end
 
    end,
 })
