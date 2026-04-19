@@ -77,69 +77,7 @@ local Toggle = Tab:CreateToggle({
    CurrentValue = false,
    Flag = "Toggle1", 
    Callback = function(Value)
-   local player = game.Players.LocalPlayer
-local RS = game:GetService("RunService")
-local UIS = game:GetService("UserInputService")
-
-local char = player.Character or player.CharacterAdded:Wait()
-local hrp = char:WaitForChild("HumanoidRootPart")
-
--- store globally so it doesn't recreate every toggle
-_G.FlyData = _G.FlyData or {}
-
-if Value then
-    if _G.FlyData.Running then return end
-    _G.FlyData.Running = true
-
-    local BV = Instance.new("BodyVelocity")
-    BV.MaxForce = Vector3.new(1e9, 1e9, 1e9)
-    BV.Velocity = Vector3.zero
-    BV.Parent = hrp
-
-    local BG = Instance.new("BodyGyro")
-    BG.MaxTorque = Vector3.new(1e9, 1e9, 1e9)
-    BG.CFrame = hrp.CFrame
-    BG.Parent = hrp
-
-    _G.FlyData.BV = BV
-    _G.FlyData.BG = BG
-
-    _G.FlyData.Connection = RS.RenderStepped:Connect(function()
-        local cam = workspace.CurrentCamera
-        local moveDir = Vector3.zero
-
-        if UIS:IsKeyDown(Enum.KeyCode.W) then moveDir += cam.CFrame.LookVector end
-        if UIS:IsKeyDown(Enum.KeyCode.S) then moveDir -= cam.CFrame.LookVector end
-        if UIS:IsKeyDown(Enum.KeyCode.A) then moveDir -= cam.CFrame.RightVector end
-        if UIS:IsKeyDown(Enum.KeyCode.D) then moveDir += cam.CFrame.RightVector end
-        if UIS:IsKeyDown(Enum.KeyCode.Space) then moveDir += Vector3.new(0,1,0) end
-        if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then moveDir -= Vector3.new(0,1,0) end
-
-        if moveDir.Magnitude > 0 then
-            BV.Velocity = moveDir.Unit * 60
-        else
-            BV.Velocity = Vector3.zero
-        end
-
-        BG.CFrame = cam.CFrame
-    end)
-
-else
-    -- turn OFF
-    if _G.FlyData.Connection then
-        _G.FlyData.Connection:Disconnect()
-    end
-
-    if _G.FlyData.BV then
-        _G.FlyData.BV:Destroy()
-    end
-
-    if _G.FlyData.BG then
-        _G.FlyData.BG:Destroy()
-    end
-
-    _G.FlyData = {}
-end
+   
    end,
 })
 
