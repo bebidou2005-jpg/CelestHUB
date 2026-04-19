@@ -78,32 +78,33 @@ local Toggle = Tab:CreateToggle({
    Flag = "Toggle1", 
    Callback = function(Value)
    local player = game.Players.LocalPlayer
-local UIS = game:GetService("UserInputService")
 local RS = game:GetService("RunService")
+local UIS = game:GetService("UserInputService")
 
-local flying = false
-local BV, BG
-local speed = 60
+local char = player.Character or player.CharacterAdded:Wait()
+local hrp = char:WaitForChild("HumanoidRootPart")
 
-local function startFly()
-    local char = player.Character or player.CharacterAdded:Wait()
-    local hrp = char:WaitForChild("HumanoidRootPart")
+-- store globally so it doesn't recreate every toggle
+_G.FlyData = _G.FlyData or {}
 
-    BV = Instance.new("BodyVelocity")
+if Value then
+    if _G.FlyData.Running then return end
+    _G.FlyData.Running = true
+
+    local BV = Instance.new("BodyVelocity")
     BV.MaxForce = Vector3.new(1e9, 1e9, 1e9)
     BV.Velocity = Vector3.zero
     BV.Parent = hrp
 
-    BG = Instance.new("BodyGyro")
+    local BG = Instance.new("BodyGyro")
     BG.MaxTorque = Vector3.new(1e9, 1e9, 1e9)
     BG.CFrame = hrp.CFrame
     BG.Parent = hrp
 
-    flying = true
+    _G.FlyData.BV = BV
+    _G.FlyData.BG = BG
 
-    RS:BindToRenderStep("Fly", Enum.RenderPriority.Character.Value, function()
-        if not flying then return end
-
+    _G.FlyData.Connection = RS.RenderStepped:Connect(function()
         local cam = workspace.CurrentCamera
         local moveDir = Vector3.zero
 
@@ -115,21 +116,29 @@ local function startFly()
         if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then moveDir -= Vector3.new(0,1,0) end
 
         if moveDir.Magnitude > 0 then
-            BV.Velocity = moveDir.Unit * speed
+            BV.Velocity = moveDir.Unit * 60
         else
             BV.Velocity = Vector3.zero
         end
 
         BG.CFrame = cam.CFrame
     end)
-end
 
-local function stopFly()
-    flying = false
-    RS:UnbindFromRenderStep("Fly")
+else
+    -- turn OFF
+    if _G.FlyData.Connection then
+        _G.FlyData.Connection:Disconnect()
+    end
 
-    if BV then BV:Destroy() BV = nil end
-    if BG then BG:Destroy() BG = nil end
+    if _G.FlyData.BV then
+        _G.FlyData.BV:Destroy()
+    end
+
+    if _G.FlyData.BG then
+        _G.FlyData.BG:Destroy()
+    end
+
+    _G.FlyData = {}
 end
    end,
 })
