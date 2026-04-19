@@ -77,7 +77,103 @@ local Toggle = Tab:CreateToggle({
    CurrentValue = false,
    Flag = "Toggle1", 
    Callback = function(Value)
-   
+   local Fly = {}
+
+local player = game.Players.LocalPlayer
+local camera = workspace.CurrentCamera
+
+local character
+local hrp
+
+local bodyVelocity
+local bodyGyro
+
+local speed = 80
+local flying = false
+
+local keys = {
+	W = false,
+	A = false,
+	S = false,
+	D = false,
+	Space = false,
+	LeftControl = false
+}
+
+-- Update character
+local function setupChar()
+	character = player.Character or player.CharacterAdded:Wait()
+	hrp = character:WaitForChild("HumanoidRootPart")
+end
+
+setupChar()
+player.CharacterAdded:Connect(setupChar)
+
+-- INPUT (you can remove this if your UI handles movement)
+local UIS = game:GetService("UserInputService")
+
+UIS.InputBegan:Connect(function(input, gpe)
+	if gpe then return end
+	if keys[input.KeyCode.Name] ~= nil then
+		keys[input.KeyCode.Name] = true
+	end
+end)
+
+UIS.InputEnded:Connect(function(input)
+	if keys[input.KeyCode.Name] ~= nil then
+		keys[input.KeyCode.Name] = false
+	end
+end)
+
+-- START FLY
+function Fly:StartFly(customSpeed)
+	if flying then return end
+	flying = true
+
+	speed = customSpeed or speed
+
+	bodyVelocity = Instance.new("BodyVelocity")
+	bodyVelocity.MaxForce = Vector3.new(1,1,1) * 100000
+	bodyVelocity.Velocity = Vector3.zero
+	bodyVelocity.Parent = hrp
+
+	bodyGyro = Instance.new("BodyGyro")
+	bodyGyro.MaxTorque = Vector3.new(1,1,1) * 100000
+	bodyGyro.CFrame = hrp.CFrame
+	bodyGyro.Parent = hrp
+end
+
+-- STOP FLY
+function Fly:StopFly()
+	flying = false
+
+	if bodyVelocity then bodyVelocity:Destroy() end
+	if bodyGyro then bodyGyro:Destroy() end
+end
+
+-- MAIN LOOP
+game:GetService("RunService").RenderStepped:Connect(function()
+	if not flying or not hrp then return end
+
+	local moveDir = Vector3.zero
+
+	if keys.W then moveDir += camera.CFrame.LookVector end
+	if keys.S then moveDir -= camera.CFrame.LookVector end
+	if keys.A then moveDir -= camera.CFrame.RightVector end
+	if keys.D then moveDir += camera.CFrame.RightVector end
+	if keys.Space then moveDir += Vector3.new(0,1,0) end
+	if keys.LeftControl then moveDir -= Vector3.new(0,1,0) end
+
+	if moveDir.Magnitude > 0 then
+		bodyVelocity.Velocity = moveDir.Unit * speed
+	else
+		bodyVelocity.Velocity = Vector3.zero
+	end
+
+	bodyGyro.CFrame = camera.CFrame
+end)
+
+return Fly
    end,
 })
 
